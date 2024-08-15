@@ -4,18 +4,8 @@ const   svg = d3.select("svg"),
 
 const tooltip = d3.select("#tooltip");
 
-// 定义箭头标记
-// svg.append("defs").append("marker")
-//     .attr("id", "arrow")
-//     .attr("viewBox", "0 -5 10 10")
-//     .attr("refX", 15)  // 控制箭头离节点的距离
-//     .attr("refY", 0)
-//     .attr("markerWidth", 6)
-//     .attr("markerHeight", 6)
-//     .attr("orient", "auto")
-//     .append("path")
-//     .attr("d", "M0,-5L10,0L0,5")
-//     .attr("fill", "#f00");  // 将箭头颜色设置为红色
+const nodeCircleWidth = 26
+const nodeArrowWidth = 12
 
 // 模组与图表的映射关系
 const moduleMaps = {
@@ -62,33 +52,23 @@ function loadGraph(dataFile) {
     svg.append("defs").append("marker")
         .attr("id", "arrow")
         .attr("viewBox", "0 -5 10 10")  // 根据路径调整 viewBox
-        .attr("refX", 26)  // 根据节点大小调整 refX 节点半径20 + 箭头一半6
+        .attr("refX", nodeCircleWidth + nodeArrowWidth / 2)  // 根据节点大小调整 refX 节点半径 nodeCircleWidth + 箭头一半6
         .attr("refY", 0)
-        .attr("markerWidth", 12)  // 设置合理的箭头大小
-        .attr("markerHeight", 12)
+        .attr("markerWidth", nodeArrowWidth)  // 设置合理的箭头大小
+        .attr("markerHeight", nodeArrowWidth)
         .attr("orient", "auto")
         .append("path")
         .attr("d", "M0,-5L10,0L0,5")  // 路径与 viewBox 匹配
         .attr("fill", "#f00");  // 确保填充颜色为红色
-
-    // svg.append("defs").append("marker")
-    //     .attr("id", "arrow")
-    //     .attr("viewBox", "0 -5 10 10")
-    //     .attr("refX", 35)
-    //     .attr("refY", 0)
-    //     .attr("markerWidth", 100)
-    //     .attr("markerHeight", 100)
-    //     .attr("orient", "auto")
-    //     .append("path")
-    //     .attr("d", "M0,-5L10,0L0,5")
-    //     .attr("fill", "#999");
 
     d3.json(dataFile).then(function(graph) {
         const nodes = graph.nodes;
         const links = graph.links;
 
         const simulation = d3.forceSimulation(nodes)
-            .force("link", d3.forceLink(links).id(d => d.id).distance(100))
+        .force("link", d3.forceLink(links).id(d => d.id)
+            .distance(300)  // 设定较大的初始距离，允许连线变长
+            .strength(0))  // 调整 strength 值，减小对连线长度的约束
             .force("charge", d3.forceManyBody().strength(-300))
             .force("center", d3.forceCenter(width / 2, height / 2));
 
@@ -119,7 +99,7 @@ function loadGraph(dataFile) {
 
         node.append("circle")
             .attr("class", "node")
-            .attr("r", 20)
+            .attr("r", nodeCircleWidth)
             .call(d3.drag()
                 .on("start", dragstarted)
                 .on("drag", dragged)
@@ -133,8 +113,8 @@ function loadGraph(dataFile) {
         node.on("click", function(event, d) {
             const [x, y] = d3.pointer(event);
             tooltip
-                .style("left", `${x + 20}px`)
-                .style("top", `${y - 20}px`)
+                .style("left", `${x + nodeCircleWidth}px`)
+                .style("top", `${y - nodeCircleWidth}px`)
                 .style("opacity", 1)
                 .html(`<strong>${d.id}</strong><br>${d.description}`);
         });
@@ -160,8 +140,20 @@ function loadGraph(dataFile) {
                 .attr("y2", d => d.target.y);
 
             linkText
-                .attr("x", d => (d.source.x + d.target.x) / 2)  // 文字放在连线中间
-                .attr("y", d => (d.source.y + d.target.y) / 2);
+                .attr("x", function(d) {
+                    const dx = d.target.x - d.source.x;
+                    const dy = d.target.y - d.source.y;
+                    const angle = Math.atan2(dy, dx);
+                    const offset = nodeCircleWidth; // 设置偏移距离
+                    return (d.source.x + d.target.x) / 2 + offset * Math.sin(angle);
+                })
+                .attr("y", function(d) {
+                    const dx = d.target.x - d.source.x;
+                    const dy = d.target.y - d.source.y;
+                    const angle = Math.atan2(dy, dx);
+                    const offset = nodeCircleWidth; // 设置偏移距离
+                    return (d.source.y + d.target.y) / 2 - offset * Math.cos(angle);
+                });
 
             node.selectAll("circle")
                 .attr("cx", d => d.x)
