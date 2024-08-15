@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Node Graph</title>
+    <style>
+        .node {
+            cursor: pointer;
+        }
+        .link {
+            stroke: #999;
+            stroke-opacity: 0.6;
+        }
+        text {
+            font-family: sans-serif;
+            font-size: 14px;
+            fill: #fff;
+        }
+        .tooltip {
+            position: absolute;
+            padding: 10px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <svg width="960" height="600"></svg>
+    <div id="tooltip" class="tooltip"></div>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script>
+        const svg = d3.select("svg"),
+              width = +svg.attr("width"),
+              height = +svg.attr("height");
+
+        const nodes = [
+            {id: "沙漠", description: "这是沙漠的详细描述。"},
+            {id: "山", description: "这是山的详细描述。"},
+            {id: "房子", description: "这是房子的详细描述。"}
+        ];
+
+        const links = [
+            {source: "沙漠", target: "山"},
+            {source: "山", target: "房子"}
+        ];
+
+        const simulation = d3.forceSimulation(nodes)
+            .force("link", d3.forceLink(links).id(d => d.id).distance(100))
+            .force("charge", d3.forceManyBody().strength(-300))
+            .force("center", d3.forceCenter(width / 2, height / 2));
+
+        const link = svg.append("g")
+            .attr("class", "links")
+            .selectAll("line")
+            .data(links)
+            .enter().append("line")
+            .attr("class", "link");
+
+        const node = svg.append("g")
+            .attr("class", "nodes")
+            .selectAll("g")
+            .data(nodes)
+            .enter().append("g");
+
+        node.append("circle")
+            .attr("class", "node")
+            .attr("r", 20)
+            .call(d3.drag()
+                .on("start", dragstarted)
+                .on("drag", dragged)
+                .on("end", dragended));
+
+        node.append("text")
+            .attr("dx", -15)
+            .attr("dy", 5)
+            .attr("fill", "white")
+            .text(d => d.id);
+
+        const tooltip = d3.select("#tooltip");
+
+        node.on("click", function(event, d) {
+            const [x, y] = d3.pointer(event);
+            tooltip
+                .style("left", `${x + 20}px`)
+                .style("top", `${y - 20}px`)
+                .style("opacity", 1)
+                .html(`<strong>${d.id}</strong><br>${d.description}`);
+        });
+
+        svg.on("click", function(event) {
+            if (event.target.tagName !== 'circle') {
+                tooltip.style("opacity", 0);
+            }
+        });
+
+        simulation
+            .nodes(nodes)
+            .on("tick", ticked);
+
+        simulation.force("link")
+            .links(links);
+
+        function ticked() {
+            link
+                .attr("x1", d => d.source.x)
+                .attr("y1", d => d.source.y)
+                .attr("x2", d => d.target.x)
+                .attr("y2", d => d.target.y);
+
+            node.selectAll("circle")
+                .attr("cx", d => d.x)
+                .attr("cy", d => d.y);
+
+            node.selectAll("text")
+                .attr("x", d => d.x)
+                .attr("y", d => d.y);
+        }
+
+        function dragstarted(event, d) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            d.fx = d.x;
+            d.fy = d.y;
+        }
+
+        function dragged(event, d) {
+            d.fx = event.x;
+            d.fy = event.y;
+        }
+
+        function dragended(event, d) {
+            if (!event.active) simulation.alphaTarget(0);
+            d.fx = null;
+            d.fy = null;
+        }
+    </script>
+</body>
+</html>
