@@ -20,3 +20,6 @@ text {
     opacity: 0;
     transition: opacity 0.2s ease-in-out;
 }
+.link-text text {
+    fill: #000;  /* 设置连线文字为黑色 */
+}
