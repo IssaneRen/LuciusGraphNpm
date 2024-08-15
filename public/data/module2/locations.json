@@ -1,0 +1,13 @@
+{
+    "nodes": [
+      {"id": "城市", "description": "这是城市的详细描述。"},
+      {"id": "海洋", "description": "这是海洋的详细描述。"},
+      {"id": "山脉", "description": "这是山脉的详细描述。"}
+    ],
+    "links": [
+      {"source": "城市", "target": "海洋"},
+      {"source": "海洋", "target": "山脉"},
+      {"source": "山脉", "target": "城市"}
+    ]
+  }
+  

@@ -1,0 +1,12 @@
+{
+    "nodes": [
+      {"id": "沙漠", "description": "这是沙漠的详细描述。"},
+      {"id": "山", "description": "这是山的详细描述。"},
+      {"id": "房子", "description": "这是房子的详细描述。"}
+    ],
+    "links": [
+      {"source": "沙漠", "target": "山"},
+      {"source": "山", "target": "房子"}
+    ]
+  }
+  
