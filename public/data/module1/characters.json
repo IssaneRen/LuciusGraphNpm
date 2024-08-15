@@ -1,0 +1,9 @@
+{
+    "nodes": [
+      {"id": "Alice", "description": "她是一个冒险家。"},
+      {"id": "Bob", "description": "他是一个商人。"}
+    ],
+    "links": [
+      {"source": "Alice", "target": "Bob"}
+    ]
+}
